@@ -4,8 +4,14 @@
 The dataset contains a subset of the  data based on the Human Activity Recognition Using Smartphone Data set 
 (http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones). 
 
-## Dataset preparation
+The dataset was split into 70% training and 30% test data.
 
+## Dataset preparation
+1. The test and training datasets were merged.
+2. The column names were sanitized to remove any punctuations (i.e [,() ]
+3. The subject and activity data were merged into the  main measures [ subject/X and y ] text datasets in each of the training and test directories.
+4. A subset of the complete dataset was created with only the means and standard deviations of the measurements.
+5. Finally, an average of the mean and standard deviation was created based on a grouping of the Activity and Subject to create the final file ActivitySubjectAverages.txt.
 
 ## Feature Selection
 
