@@ -21,13 +21,16 @@ library(data.table)
 ##  featureFileName: Feature File name containing the description of the columns.
 #########################################################################################################
 getColumnNames <- function(featureFileName) {
-  features <- read.table(featureFileName, stringsAsFactors=FALSE)
-  columns <- features$V2
-  columns <- gsub("[(,)-]","",columns)
-  columns <- c("Subject","Activity", columns)
-  columns
+        features <- read.table(featureFileName, stringsAsFactors=FALSE)
+        columns <- features$V2
+        columns <- gsub("[(,)-]","",columns)
+        columns <- c("Subject","Activity", columns)
+        columns
 }
-
+getActivities <- function(activityFileName) {
+        activities <- read.table(activityFileName, stringsAsFactors=FALSE, header=FALSE, sep=" ")
+        activities
+}
 ######################################################################################################### 
 ## Function: createDataSet
 ## Synposis: Creates the dataset from the training/test directory.  The different datasets are read and 
@@ -36,13 +39,13 @@ getColumnNames <- function(featureFileName) {
 ##  datasetKey: Key that specifies either 'training' or 'test'
 #########################################################################################################
 createDataSet <- function (datasetKey, columnNames) {
-  dataSetNames <- c(paste0(datasetKey,"/X_",datasetKey,sep=""), paste(datasetKey,"/subject_",datasetKey,sep=""),paste(datasetKey,"/y_",datasetKey,sep=""))
-  df <- read.table(paste0(dataSetNames[1],".txt"))
-  sub <- read.table(paste0(dataSetNames[2],".txt"))
-  y <- read.table(paste0(dataSetNames[3],".txt"))
-  df <- cbind(sub, y, df)      
-  names(df) <- columnNames
-  as.data.table(df)
+        dataSetNames <- c(paste0(datasetKey,"/X_",datasetKey,sep=""), paste(datasetKey,"/subject_",datasetKey,sep=""),paste(datasetKey,"/y_",datasetKey,sep=""))
+        df <- read.table(paste0(dataSetNames[1],".txt"))
+        sub <- read.table(paste0(dataSetNames[2],".txt"))
+        y <- read.table(paste0(dataSetNames[3],".txt"))
+        df <- cbind(sub, y, df)      
+        names(df) <- columnNames
+        as.data.table(df)
 }
 
 ######################################################################################################### 
@@ -53,8 +56,12 @@ createDataSet <- function (datasetKey, columnNames) {
 ##  columnNames:     The column names
 #########################################################################################################
 filterDataSet <- function(completeDataSet, columnNames) {
-  filteredColumnNames <- grep("mean|std|Subject|Activity",columnNames, ignore.case = T)
-  filteredDataset <- subset(completeDataSet, TRUE, filteredColumnNames)
+        filteredColumnNames <- grep("mean|std|Subject|Activity",columnNames, ignore.case = T)
+        filteredDataset <- subset(completeDataSet, TRUE, filteredColumnNames)
+        activities <- getActivities("activity_labels.txt")
+        filteredDataset$Activity <- as.factor(filteredDataset$Activity)
+        levels(filteredDataset$Activity) <- activities$V2
+        filteredDataset
 }
 
 ######################################################################################################### 
@@ -65,13 +72,13 @@ filterDataSet <- function(completeDataSet, columnNames) {
 ##  workingDirectory: Working directory where teh Samrtphone dataset is located.
 #########################################################################################################
 mergeTrainingTestData <- function(workingDirectory) {
-  setwd(workingDirectory)
-  columnNames <- getColumnNames("features.txt")
-  training <- createDataSet("train", columnNames)
-  test <- createDataSet("test", columnNames)
-  completeDataSet <- rbind(test,training)
-  
-  filterDataSet(completeDataSet, columnNames)
+        setwd(workingDirectory)
+        columnNames <- getColumnNames("features.txt")
+        training <- createDataSet("train", columnNames)
+        test <- createDataSet("test", columnNames)
+        completeDataSet <- rbind(test,training)
+        
+        filterDataSet(completeDataSet, columnNames)
 }
 
 ######################################################################################################### 
@@ -81,9 +88,9 @@ mergeTrainingTestData <- function(workingDirectory) {
 ##  filteredDataset: Dataset containing only tehcolumns that we want to work with.
 #########################################################################################################
 prepareActivitySubjectDataSet <- function(filteredDataset) {
-  averagesDataSet <- filteredDataset[, lapply(.SD, mean), by=list(Subject, Activity), .SDcols=3:ncol(filteredDataset)]
-  setwd("../")
-  write.table(averagesDataSet,"ActivitySubjectAverages.txt", row.names=FALSE)
+        averagesDataSet <- filteredDataset[, lapply(.SD, mean), by=list(Subject, Activity), .SDcols=3:ncol(filteredDataset)]
+        setwd("../")
+        write.table(averagesDataSet,"ActivitySubjectAverages.txt", row.names=FALSE)
 }
 
 ######################################################################################################### 
@@ -94,9 +101,9 @@ prepareActivitySubjectDataSet <- function(filteredDataset) {
 ##         dataset.
 #########################################################################################################
 run_analysis <- function() {
-  
-  workingDirectory="UCI HAR Dataset"
-  # Create second tidy data
-  prepareActivitySubjectDataSet(mergeTrainingTestData(workingDirectory))
-  
+        
+        workingDirectory="UCI HAR Dataset"
+        # Create second tidy data
+        prepareActivitySubjectDataSet(mergeTrainingTestData(workingDirectory))
+        
 }
